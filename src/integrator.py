@@ -17,3 +17,11 @@ def FirstOrderQuaternionIntegrator(B_0, func, end_time, time_step):
 		B = B + B_diff * time_step
 
 	return B
+
+def FirstOrderCRPIntegrator(q_0, func, end_time, time_step):
+	q = q_0
+
+	for t in np.arange(0.0, end_time, time_step):
+		q = q + func(t, q) * time_step
+
+	return q

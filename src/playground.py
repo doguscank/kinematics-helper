@@ -14,9 +14,17 @@ def Week3ConceptCheck8(t):
 
 	return W
 
-B_0 = np.float32([0.408248,0.,0.408248,0.816497])
+def Week3ConceptCheck13(t, q):
+	W = np.float32([sin(0.1 * t), 0.01, cos(0.1 * t)]) * deg2rad(3)
+	x = np.eye(3) + tilde(q.T) + np.multiply(q, q.T)
+	
+	dq = 0.5 * np.dot(x, W)
 
-r = FirstOrderQuaternionIntegrator(B_0, Week3ConceptCheck8, 42, 0.001)
-norm = beta_norm((r[0], r[1], r[2], r[3]))
+	return dq
 
-print(r, norm)
+q_0 = np.float32([[0.4, 0.2, -0.1]])
+
+r = FirstOrderCRPIntegrator(q_0, Week3ConceptCheck13, 42, 0.001)
+
+print(r)
+print(CRPNorm(r))

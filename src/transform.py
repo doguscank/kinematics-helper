@@ -23,6 +23,13 @@ def M3(d):
 
 	return M3
 
+def tilde(m):
+	r = np.float32([[0, -m[2], m[1]],
+				  [m[2], 0, -m[0]],
+				  [-m[1], m[0], 0]])
+
+	return r
+
 def deg2rad(d):
 	return d * math.pi / 180
 
@@ -98,3 +105,36 @@ def beta_norm(betas):
 
 def beta_norm_np(betas):
 	return np.sqrt(np.sum(np.square(betas[1:])))
+
+def CRPAddition(q_p, q_pp):
+	q = q_pp + q_p - np.cross(q_pp, q_p)
+	q = q / (1 - np.dot(q_pp, q_p.T))
+
+	return q
+
+def CRPSubtraction(q, q_p):
+	q_pp = q - q_p + np.cross(q, q_p)
+	q_pp = q_pp / (1 + np.dot(q, q_p.T))
+
+	return q_pp
+
+def CRP2DCM(q):
+	C = np.multiply((1 - np.dot(q.T, q)), np.eye(3)) + 2 * np.dot(q, q.T) - 2 * tilde(q)
+	C = C / (1 + np.dot(q.T, q))
+
+	return C
+
+def DCM2CRP(m):
+	trace = m[0, 0] + m[1, 1] + m[2, 2]
+	S = sqrt(trace + 1)
+
+	q = np.float32([[m[1, 2] - m[2, 1]],
+					[m[2, 0] - m[0, 2]],
+					[m[0, 1] - m[1, 0]]])
+
+	q = q / pow(S, 2)
+
+	return q
+
+def CRPNorm(q):
+	return np.sqrt(np.sum(np.square(q)))
