@@ -22,9 +22,10 @@ def Week3ConceptCheck13(t, q):
 
 	return dq
 
-q_0 = np.float32([[0.4, 0.2, -0.1]])
+DCM = np.float32([[0.763314,-0.568047,-0.307692],
+	[0.0946746,-0.372781,0.923077],
+	[-0.639053,-0.733728,-0.230769]])
 
-r = FirstOrderCRPIntegrator(q_0, Week3ConceptCheck13, 42, 0.001)
+r = DCM2MRP(DCM.T)
 
 print(r)
-print(CRPNorm(r))

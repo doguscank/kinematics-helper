@@ -138,3 +138,25 @@ def DCM2CRP(m):
 
 def CRPNorm(q):
 	return np.sqrt(np.sum(np.square(q)))
+
+def MRP2DCM(s):
+	norm = np.dot(s.T, s)
+	_tilde = tilde(s)
+
+	C = 8 * np.dot(_tilde, _tilde) - 4 * (1 - norm) * _tilde
+	C = C / np.square(1 + norm)
+	C = np.eye(3) + C
+
+	return C
+
+def DCM2MRP(m):
+	trace = m[0, 0] + m[1, 1] + m[2, 2]
+	S = sqrt(trace + 1)
+
+	s = np.float32([[m[1, 2] - m[2, 1]],
+					[m[2, 0] - m[0, 2]],
+					[m[0, 1] - m[1, 0]]])
+
+	s = s / (S * (S + 2))
+
+	return s
