@@ -160,3 +160,17 @@ def DCM2MRP(m):
 	s = s / (S * (S + 2))
 
 	return s
+
+def MRPAddition(s_p, s_pp):
+	s = (1 - np.sum(np.square(s_p))) * s_pp + (1 - np.sum(np.square(s_pp))) * s_p
+	s = s - 2 * np.cross(s_pp, s_p)
+	s = s / (1 + np.sum(np.square(s_p)) * np.sum(np.square(s_pp)) - 2 * np.dot(s_p, s_pp.T))
+
+	return s
+
+def MRPSubtraction(s, s_p):
+	s_pp = (1 - np.sum(np.square(s_p))) * s - (1 - np.sum(np.square(s))) * s_p
+	s_pp = s_pp + 2 * np.cross(s, s_p)
+	s_pp = s_pp / (1 + np.sum(np.square(s_p)) * np.sum(np.square(s)) + 2 * np.dot(s_p, s.T))
+
+	return s_pp
