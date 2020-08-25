@@ -30,6 +30,13 @@ def tilde(m):
 
 	return r
 
+def tilde2(m):
+	r = np.float32([[0, -m[0, 2], m[0, 1]],
+				  [m[0, 2], 0, -m[0, 0]],
+				  [-m[0, 1], m[0, 0], 0]])
+
+	return r
+
 def deg2rad(d):
 	return d * math.pi / 180
 
@@ -174,3 +181,52 @@ def MRPSubtraction(s, s_p):
 	s_pp = s_pp / (1 + np.sum(np.square(s_p)) * np.sum(np.square(s)) + 2 * np.dot(s_p, s.T))
 
 	return s_pp
+
+def MRPNormalization(s):
+	if np.sqrt(np.sum(np.square(s))) > 1:
+		s = s * (-1 / np.sum(np.square(s)))
+
+	return s
+
+def MRPDiffEq(s, w):
+	ds = (1 - np.sum(np.square(s))) * np.eye(3) + 2 * tilde2(s) + 2 * np.multiply(s, s.T)
+	ds = ds / 4
+	ds = np.dot(ds, w)
+
+	print(ds)
+
+	return ds
+
+def DCM2PRV(m):
+	cos_phi = 0.5 * (m[0, 0] + m[1, 1] + m[2, 2] - 1)
+	phi = math.acos(cos_phi)
+
+	e = np.float32([[m[1,2] - m[2,1], m[2,0] - m[0, 2], m[0,1] - m[1,0]]])
+	e = e / (2 * sin(phi))
+
+	return e, phi
+
+def TriadFrame(v1, v2):
+	t1 = v1
+	t2 = np.cross(v1, v2)
+	t2 = t2 / np.linalg.norm(t2)
+	t3 = np.cross(t1, t2)
+
+	Triad_frame = np.float32([t1, t2, t3])
+
+	return Triad_frame
+
+def Triad_BdashN(v1_N, v1_B, v2_N, v2_B):
+	N_Triad = TriadFrame(v1_N, v2_N).T.reshape((3, 3))
+	B_Triad = TriadFrame(v1_B, v2_B).T.reshape((3, 3))
+
+	BdashN = np.dot(B_Triad, N_Triad.T)
+
+	return BdashN
+
+def TriadError(BdashN, BN):
+	BdashB = np.dot(BdashN, BN.T)
+
+	e, phi = DCM2PRV(BdashB)
+
+	return phi #In radians

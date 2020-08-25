@@ -22,9 +22,19 @@ def Week3ConceptCheck13(t, q):
 
 	return dq
 
-s = np.float32([[0.1, 0.2, 0.3]])
-s_p = np.float32([[0.5, 0.3, 0.1]])
+def Week3ConceptCheck20(t):
+	W = np.float32([sin(0.1 * t), 0.01, cos(0.1 * t)]) * deg2rad(20)
 
-r = MRPSubtraction(s, s_p)
+	return W
+
+B_N = np.float32([[0.969846,-0.200706,-0.138258],
+				[0.17101,0.96461,-0.200706],
+				[0.173648,0.17101,0.969846]]).T
+
+BN = np.float32([[0.963592,-0.223042,-0.147454],
+				[0.187303,0.956645,-0.223042],
+				[0.190809,0.187303,0.963592]]).T
+
+r = TriadError(B_N, BN)
 
 print(r)
