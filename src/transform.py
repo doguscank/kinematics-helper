@@ -53,8 +53,6 @@ def DCM2EP(dcm):
 	beta_squares = np.float32([[B_0_2, B_1_2, B_2_2, B_3_2]])
 	index = np.argmax(beta_squares)
 
-	print(index)
-
 	if index == 0:
 		B_0 = sqrt(B_0_2)
 		B_1 = (dcm[1, 2] - dcm[2, 1]) / (4 * B_0)
@@ -77,6 +75,17 @@ def DCM2EP(dcm):
 		B_0 = (dcm[0, 1] - dcm[1, 0]) / (4 * B_3)
 
 	return (B_0, B_1, B_2, B_3)
+
+def EP2DCM(q):
+	q = q / np.linalg.norm(q)
+
+	g = np.float32([[q[0, 1]/q[0, 0], q[0, 2]/q[0, 0], q[0, 3]/q[0, 0]]]).T
+	G = tilde2(g.T)
+
+	C = (1 - np.dot(g.T, g)) * np.eye(3) + 2 * np.dot(g, g.T) - 2 * G
+	C = C / (1 + np.dot(g.T, g))
+
+	return C
 
 def B_double_prime(betas):
 	B_0, B_1, B_2, B_3 = betas
@@ -230,3 +239,50 @@ def TriadError(BdashN, BN):
 	e, phi = DCM2PRV(BdashB)
 
 	return phi #In radians
+
+def Devenport_q(v1_B, v1_N, v2_B, v2_N, w1 = 1, w2 = 1):
+	B = w1 * np.dot(v1_B.T, v1_N) + w2 * np.dot(v2_B.T, v2_N)
+	sigma = B[0, 0] + B[1, 1] + B[2, 2]
+	Z = np.float32([[B[1, 2] - B[2, 1], B[2, 0] - B[0, 2], B[0, 1] - B[1, 0]]])
+	S = B + B.T
+	S_p = S - sigma * np.eye(3)
+	K = np.float32([[sigma, Z[0, 0], Z[0, 1], Z[0, 2]],
+					[Z[0, 0], S_p[0, 0], S_p[0, 1], S_p[0, 2]],
+					[Z[0, 1], S_p[1, 0], S_p[1, 1], S_p[1, 2]],
+					[Z[0, 2], S_p[2, 0], S_p[2, 1], S_p[2, 2]]])
+
+	vals, vecs = np.linalg.eig(K)
+	max_index = np.argmax(vals)
+
+	lambd = vals[max_index]
+	eig_vec = vecs[max_index]
+
+	C = EP2DCM(eig_vec.reshape((1, 4)))
+
+	return C
+
+def QUEST(v1_B, v1_N, v2_B, v2_N, w1 = 1, w2 = 1):
+	lambda_optimal = w1 + w2
+	B = w1 * np.dot(v1_B.T, v1_N) + w2 * np.dot(v2_B.T, v2_N)
+	S = B + B.T
+	sigma = B[0, 0] + B[1, 1] + B[2, 2]
+	Z = np.float32([[B[1, 2] - B[2, 1], B[2, 0] - B[0, 2], B[0, 1] - B[1, 0]]])
+
+	q_dash = np.dot(np.linalg.inv((lambda_optimal + sigma) * np.eye(3) - S), Z.T)
+
+	B_dash = (1 / (1 + np.dot(q_dash.T, q_dash))) * np.float32([[1, q_dash[0], q_dash[1], q_dash[2]]])
+
+	return B_dash
+
+def OLAE(v1_B, v1_N, v2_B, v2_N, w1 = 1, w2 = 1):
+	S = np.float32([[tilde2(v1_B + v1_N), tilde2(v2_B + v2_N)]]).reshape((6, 3))
+	d = np.float32([[v1_B - v1_N, v2_B - v2_N]]).reshape((6, 1))
+	W = np.eye(6)
+	q_dash = np.linalg.inv(np.dot(np.dot(S.T, W), S))
+	q_dash = np.dot(q_dash, S.T)
+	q_dash = np.dot(q_dash, W)
+	q_dash = np.dot(q_dash, d)
+
+	B_dash = (1 / (1 + np.dot(q_dash.T, q_dash))) * np.float32([[1, q_dash[0], q_dash[1], q_dash[2]]])
+
+	return B_dash
