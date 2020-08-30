@@ -2,6 +2,9 @@ import numpy as np
 from math import sin, cos, atan2, sqrt, pow
 import math
 
+def deg2rad(d):
+	return d * math.pi / 180
+
 def M1(d):
 	M1 = np.float32([[1.0, 0.0, 0.0], 
 					 [0.0, cos(d), sin(d)],
@@ -23,6 +26,20 @@ def M3(d):
 
 	return M3
 
+def GetDCM(euler_set, angles, rad = True):
+	if not rad:
+		angles = [deg2rad(a) for a in angles]
+
+	sets = [int(c) for c in euler_set]
+	set_funcs = [M1, M2, M3]
+	result = np.eye(3)
+
+	for i, m in enumerate(sets):
+		func = set_funcs[m - 1]
+		result = np.dot(func(angles[i]), result)
+
+	return result
+
 def tilde(m):
 	r = np.float32([[0, -m[2], m[1]],
 				  [m[2], 0, -m[0]],
@@ -36,9 +53,6 @@ def tilde2(m):
 				  [-m[0, 1], m[0, 0], 0]])
 
 	return r
-
-def deg2rad(d):
-	return d * math.pi / 180
 
 def EulerNorm(angles):
 	return np.linalg.norm(deg2rad(angles))
